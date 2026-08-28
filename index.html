@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tienes un mensaje 🔒</title>
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="description" content="Contenido privado.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d12;--card:#161a24;--line:rgba(255,255,255,.08);
+  --txt:#e9e6e1;--muted:#9aa1ad;--rose:#ff7b93;--rose-soft:#ffb3c1;
+  --code:#7ee7c7;--gold:#f0c987;--red:#ff6b6b;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --script:'Dancing Script',cursive;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--serif);
+  font-size:19px;line-height:1.75;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+#hearts{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.h{position:absolute;color:var(--rose);opacity:.14;font-size:14px;animation:float linear infinite}
+@keyframes float{0%{transform:translateY(105vh) scale(.6) rotate(0)}100%{transform:translateY(-10vh) scale(1.1) rotate(25deg)}}
+.wrap{max-width:820px;margin:0 auto;padding:0 22px}
+
+/* ==========  PUERTA (GATE)  ========== */
+#gate{position:fixed;inset:0;z-index:50;background:radial-gradient(circle at 50% 30%,#141824,#0b0d12 70%);
+  display:flex;align-items:center;justify-content:center;padding:26px;transition:opacity .7s ease}
+#gate.out{opacity:0;pointer-events:none}
+.lock{width:100%;max-width:520px;background:#0e1117;border:1px solid var(--line);border-radius:16px;
+  box-shadow:0 34px 80px rgba(0,0,0,.6);overflow:hidden}
+.lbar{display:flex;gap:7px;align-items:center;padding:11px 14px;background:#151a22;border-bottom:1px solid var(--line)}
+.dot{width:11px;height:11px;border-radius:50%}
+.lbar .name{margin-left:10px;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.lbody{padding:26px 22px 28px}
+.lbody .top{font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--red);text-transform:uppercase}
+.lbody h1{font-family:var(--script);font-size:clamp(28px,7vw,40px);color:var(--rose-soft);margin:12px 0 4px;font-weight:600;line-height:1.15}
+.lbody .lead{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:22px}
+.q{font-family:var(--serif);font-style:italic;font-size:21px;color:var(--gold);margin:0 0 6px;line-height:1.4}
+.qh{font-family:var(--mono);font-size:11px;color:#6b7480;margin-bottom:14px}
+.field{display:flex;gap:8px;flex-wrap:wrap}
+input[type=text],input[type=password]{
+  flex:1 1 200px;background:#141821;border:1px solid var(--line);color:var(--txt);
+  font-family:var(--mono);font-size:15px;padding:14px 15px;border-radius:10px;outline:none;transition:.25s}
+input:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(255,123,147,.12)}
+.btn{appearance:none;border:1px solid var(--rose);background:transparent;color:var(--rose-soft);
+  font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;
+  padding:14px 22px;border-radius:10px;cursor:pointer;transition:.3s;white-space:nowrap}
+.btn:hover:not(:disabled){background:var(--rose);color:#14161c;box-shadow:0 0 30px rgba(255,123,147,.3)}
+.btn:disabled{opacity:.5;cursor:wait}
+.btn.round{border-radius:999px;padding:14px 26px}
+.status{font-family:var(--mono);font-size:12px;margin-top:16px;min-height:20px;line-height:1.7}
+.status.err{color:var(--red)}
+.status.ok{color:var(--code)}
+.status.wait{color:var(--muted)}
+.hintbtn{margin-top:14px;background:none;border:none;color:var(--muted);font-family:var(--mono);
+  font-size:11.5px;text-decoration:underline;cursor:pointer;padding:0;display:none}
+.hintbtn.show{display:inline-block}
+.hintbox{display:none;margin-top:14px;padding:14px 16px;border-left:2px solid var(--gold);
+  background:rgba(240,201,135,.06);border-radius:0 8px 8px 0;font-family:var(--serif);font-style:italic;font-size:17px;color:var(--gold)}
+.hintbox.show{display:block}
+.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.bar{height:2px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;margin-top:18px;display:none}
+.bar.show{display:block}
+.bar i{display:block;height:100%;width:30%;background:var(--code);animation:slide 1.1s ease-in-out infinite}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}
+
+/* ==========  CONTENIDO  ========== */
+#app{display:none;position:relative;z-index:1}
+#app.on{display:block}
+.hero{min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:60px 22px}
+.terminal{width:100%;max-width:640px;background:#0e1117;border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 30px 70px rgba(0,0,0,.55);overflow:hidden;text-align:left}
+.tbar{display:flex;gap:7px;align-items:center;padding:11px 14px;background:#151a22;border-bottom:1px solid var(--line)}
+.tbar .name{margin-left:10px;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.tbody{padding:20px 18px;font-family:var(--mono);font-size:14px;line-height:1.85;min-height:190px}
+.tbody .p{color:var(--code)} .tbody .c{color:#6b7480}
+.tbody .out{color:var(--txt)} .tbody .rose{color:var(--rose-soft)}
+.cursor{display:inline-block;width:8px;background:var(--code);animation:blink 1s steps(1) infinite;color:transparent}
+@keyframes blink{50%{opacity:0}}
+.hero h1{font-family:var(--script);font-size:clamp(38px,9vw,68px);font-weight:600;margin:38px 0 6px;color:var(--rose-soft);line-height:1.1}
+.hero .sub{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.scroll{margin-top:44px;font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--muted);animation:bob 2s ease-in-out infinite;text-transform:uppercase}
+@keyframes bob{50%{transform:translateY(8px)}}
+.note{padding:78px 0;border-top:1px solid var(--line)}
+.note-grid{display:grid;grid-template-columns:1fr 1fr;gap:38px;align-items:center}
+.note.flip .ph{order:2}
+.tag{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--code);text-transform:uppercase;margin-bottom:10px;display:block}
+.note h2{font-weight:600;font-style:italic;font-size:clamp(26px,4.4vw,34px);margin:0 0 16px;color:var(--rose-soft);line-height:1.2}
+.note p{margin:0 0 14px;color:#ddd8d2}
+.note p em{color:var(--gold);font-style:italic}
+.ph{position:relative;aspect-ratio:4/5;border-radius:16px;overflow:hidden;background:var(--card);
+  border:1px solid var(--line);box-shadow:0 22px 50px rgba(0,0,0,.45);margin:0}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph .empty{position:absolute;inset:0;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;
+  border:2px dashed rgba(255,255,255,.16);border-radius:16px;text-align:center;padding:18px;
+  font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.ph::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.35));pointer-events:none}
+.rev{opacity:0;transform:translateY(26px);transition:opacity .9s ease,transform .9s ease}
+.rev.on{opacity:1;transform:none}
+.date{padding:90px 0 40px;border-top:1px solid var(--line)}
+.card{background:linear-gradient(160deg,#181c26,#12151d);border:1px solid rgba(255,123,147,.28);
+  border-radius:20px;padding:38px 26px;text-align:center;box-shadow:0 30px 70px rgba(0,0,0,.5)}
+.card .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--rose);text-transform:uppercase}
+.card h2{font-family:var(--script);font-size:clamp(34px,7vw,52px);margin:12px 0 4px;color:var(--gold);font-weight:600}
+.card .hour{font-family:var(--mono);font-size:13px;color:var(--muted);margin-bottom:26px}
+.clock{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:8px 0 26px}
+.unit{min-width:78px;background:#0e1117;border:1px solid var(--line);border-radius:12px;padding:12px 8px}
+.unit .n{font-family:var(--mono);font-size:clamp(24px,6vw,32px);color:var(--code);font-weight:500;line-height:1.1}
+.unit .l{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-top:6px}
+.msg{max-width:520px;margin:0 auto 26px;color:#ddd8d2}
+.surprise{max-height:0;overflow:hidden;transition:max-height .8s ease,opacity .6s ease;opacity:0}
+.surprise.open{max-height:600px;opacity:1;margin-top:26px}
+.surprise .inner{border-top:1px solid var(--line);padding-top:24px}
+.surprise p{margin:0 0 10px}
+.surprise .big{font-family:var(--script);font-size:clamp(26px,5.5vw,36px);color:var(--rose-soft)}
+footer{padding:70px 0 90px;text-align:center;border-top:1px solid var(--line);margin-top:40px}
+footer .sig{font-family:var(--script);font-size:30px;color:var(--gold)}
+footer .meta{font-family:var(--mono);font-size:11px;color:#6b7480;letter-spacing:.14em;margin-top:14px}
+@media (max-width:720px){
+  body{font-size:18px}
+  .note-grid{grid-template-columns:1fr;gap:26px}
+  .note.flip .ph{order:0}
+  .note{padding:62px 0}
+  .ph{aspect-ratio:1/1}
+  .lbody{padding:22px 18px 24px}
+}
+</style>
+</head>
+<body>
+
+<div id="hearts" aria-hidden="true"></div>
+
+<!-- ==========  PUERTA CIFRADA  ========== -->
+<div id="gate">
+  <div class="lock" id="lock">
+    <div class="lbar">
+      <i class="dot" style="background:#ff5f57"></i>
+      <i class="dot" style="background:#febc2e"></i>
+      <i class="dot" style="background:#28c840"></i>
+      <span class="name">sudo abrir-mi-corazon</span>
+    </div>
+    <div class="lbody">
+      <div class="top">🔒 Acceso restringido</div>
+      <h1 id="gTitle">Solo para una persona</h1>
+      <div class="lead">
+        // esta página está cifrada con AES-256<br>
+        // ni yo puedo abrirla sin la respuesta<br>
+        // spoiler: tú sí puedes 🤍
+      </div>
+
+      <p class="q" id="gQ">Pregunta</p>
+      <div class="qh" id="gH">pista</div>
+
+      <form class="field" id="form" autocomplete="off">
+        <input type="text" id="ans" placeholder="tu respuesta..." autocomplete="off"
+               autocapitalize="off" spellcheck="false" enterkeyhint="go">
+        <button class="btn" id="go" type="submit">Abrir 🔓</button>
+      </form>
+
+      <div class="bar" id="bar"><i></i></div>
+      <div class="status wait" id="st"></div>
+      <button class="hintbtn" id="hintBtn" type="button">¿necesitas una pista? 👀</button>
+      <div class="hintbox" id="hintBox"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==========  CONTENIDO (se construye al desbloquear)  ========== -->
+<div id="app"></div>
+
+<script>
+/* ==================================================================
+   CONFIGURACIÓN PÚBLICA
+   Esto SÍ se ve en el código fuente (tiene que verse, es la puerta).
+   No pongas nada privado aquí. Todo lo íntimo va cifrado en payload.enc
+   ================================================================== */
+const GATE = {
+  titulo:   "Solo para una persona",
+  pregunta: "¿Qué es lo que mas te digo que me encanta de ti?",
+  ayuda:    "...",
+  pista:    "Los miro, los deseo y siempre termino queriendo acercarme un poquito más. 😏",
+  intentosParaPista: 2
+};
+/* ================================================================== */
+
+document.getElementById('gTitle').textContent = GATE.titulo;
+document.getElementById('gQ').textContent = GATE.pregunta;
+document.getElementById('gH').textContent = "// " + GATE.ayuda;
+document.getElementById('hintBox').textContent = GATE.pista;
+
+const $ = id => document.getElementById(id);
+const st = $('st');
+let fallos = 0, payload = null;
+
+/* --- normalización: debe ser IDÉNTICA a la del encriptador --- */
+function norm(s){
+  return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().replace(/[^a-z0-9]/g,'');
+}
+function b64d(str){
+  const bin = atob(str);
+  const u = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return u;
+}
+
+async function derive(pass, salt, it){
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass),
+    'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt, iterations:it, hash:'SHA-256'},
+    base, {name:'AES-GCM', length:256}, false, ['decrypt']);
+}
+
+/* --- carga del payload cifrado --- */
+(async ()=>{
+  try{
+    const r = await fetch('payload.enc?v=' + Date.now(), {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    payload = await r.json();
+    st.className='status wait';
+    st.textContent = '// contenido cifrado cargado · esperando la respuesta';
+  }catch(e){
+    st.className='status err';
+    st.innerHTML = '⚠ No se pudo cargar <b>payload.enc</b>.<br>' +
+      '<span style="color:#6b7480">Súbelo al repo junto a index.html. ' +
+      'Si estás probando en tu compu, ábrelo con un servidor local ' +
+      '(<code>python -m http.server</code>), no con doble clic.</span>';
+    $('go').disabled = true;
+  }
+})();
+
+/* --- intento de desbloqueo --- */
+$('form').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  if(!payload) return;
+  const intento = norm($('ans').value);
+  if(!intento){ $('ans').focus(); return; }
+
+  $('go').disabled = true;
+  $('bar').classList.add('show');
+  st.className='status wait';
+  st.textContent = '// descifrando...';
+  await new Promise(r => setTimeout(r, 60));
+
+  let master = null;
+  for(const k of payload.keys){
+    try{
+      const kek = await derive(intento, b64d(k.salt), payload.it);
+      const raw = await crypto.subtle.decrypt(
+        {name:'AES-GCM', iv:b64d(k.iv)}, kek, b64d(k.wrapped));
+      master = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
+      break;
+    }catch(_){ /* esta variante no era */ }
+  }
+
+  $('bar').classList.remove('show');
+
+  if(!master){
+    fallos++;
+    $('go').disabled = false;
+    $('lock').classList.remove('shake');
+    void $('lock').offsetWidth;
+    $('lock').classList.add('shake');
+    st.className='status err';
+    st.textContent = fallos === 1
+      ? '✗ No es esa... piénsalo bien, tú lo sabes 🙃'
+      : '✗ Nope. Intento ' + fallos + '. (No me voy a rendir, tú tampoco)';
+    if(fallos >= GATE.intentosParaPista) $('hintBtn').classList.add('show');
+    $('ans').select();
+    return;
+  }
+
+  try{
+    const plain = await crypto.subtle.decrypt(
+      {name:'AES-GCM', iv:b64d(payload.iv)}, master, b64d(payload.data));
+    const data = JSON.parse(new TextDecoder().decode(plain));
+    st.className='status ok';
+    st.textContent = '✔ Correcto. Abriendo...';
+    setTimeout(()=>{ render(data); }, 700);
+  }catch(e){
+    st.className='status err';
+    st.textContent = '✗ El archivo cifrado está dañado. Vuelve a generarlo.';
+    $('go').disabled = false;
+  }
+});
+
+$('hintBtn').addEventListener('click', ()=>{
+  $('hintBox').classList.add('show');
+  $('hintBtn').style.display='none';
+});
+
+/* ==================================================================
+   RENDER DEL CONTENIDO DESCIFRADO
+   ================================================================== */
+function esc(s){ return String(s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+
+function render(D){
+  const C = D.config || {};
+  const notas = D.notas || [];
+  const fotos = D.fotos || [];
+
+  document.title = (C.meses || 4) + ' meses · para ti';
+
+  let html = `
+  <section class="hero">
+    <div class="terminal">
+      <div class="tbar">
+        <i class="dot" style="background:#ff5f57"></i>
+        <i class="dot" style="background:#febc2e"></i>
+        <i class="dot" style="background:#28c840"></i>
+        <span class="name">amor@para-ti: ~/nosotros</span>
+      </div>
+      <div class="tbody" id="term"></div>
+    </div>
+    <h1>Feliz ${C.meses || 4} meses,<br>${esc(C.nombre || 'mi amor')}</h1>
+    <div class="sub">${notas.length} notas · 1 sorpresa · 0 bugs</div>
+    <div class="scroll">↓ desliza ↓</div>
+  </section>
+  <div class="wrap">`;
+
+  notas.forEach((n, i) => {
+    const foto = fotos[i]
+      ? `<img src="${fotos[i]}" alt="nosotros ${i+1}">`
+      : `<div class="empty">🖼<br>falta la foto ${i+1}</div>`;
+    const parrafos = (n.p || []).map(t => `<p>${t}</p>`).join('');
+    html += `
+    <section class="note${i % 2 ? ' flip' : ''}">
+      <div class="note-grid">
+        <figure class="ph rev">${foto}</figure>
+        <div class="rev">
+          <span class="tag">${esc(n.tag || '// nota ' + (i+1))}</span>
+          <h2>${esc(n.titulo || '')}</h2>
+          ${parrafos}
+        </div>
+      </div>
+    </section>`;
+  });
+
+  const S = D.cita || {};
+  html += `
+    <section class="date">
+      <div class="card rev">
+        <div class="kicker">${esc(S.kicker || 'Aviso importante del sistema')}</div>
+        <h2>${esc(S.titulo || 'Hoy salimos')}</h2>
+        <div class="hour" id="hourLine">${esc(S.hora || '7:30 PM · no llegues tarde 😌')}</div>
+        <div class="clock" id="clock">
+          <div class="unit"><div class="n" id="d">--</div><div class="l">días</div></div>
+          <div class="unit"><div class="n" id="h">--</div><div class="l">horas</div></div>
+          <div class="unit"><div class="n" id="m">--</div><div class="l">min</div></div>
+          <div class="unit"><div class="n" id="s">--</div><div class="l">seg</div></div>
+        </div>
+        <p class="msg" id="msg">${S.mensaje || ''}</p>
+        <button class="btn round" id="btn" type="button">Ver la sorpresa 💌</button>
+        <div class="surprise" id="surprise"><div class="inner">${S.sorpresa || ''}</div></div>
+      </div>
+    </section>
+    <footer>
+      <div class="sig">${esc(C.firma || 'Tu hombre, hoy y siempre 🤍')}</div>
+      <div class="meta">${C.meses || 4} MESES · HECHO CON CÓDIGO Y MUCHO AMOR</div>
+    </footer>
+  </div>`;
+
+  const app = $('app');
+  app.innerHTML = html;
+  app.classList.add('on');
+  $('gate').classList.add('out');
+  setTimeout(()=>$('gate').remove(), 800);
+  document.body.style.overflow = '';
+
+  typeTerminal(D.intro || []);
+  startClock(C.cita);
+  $('btn').addEventListener('click', ()=>{
+    const box = $('surprise');
+    const open = box.classList.toggle('open');
+    $('btn').textContent = open ? 'Ocultar 🤍' : 'Ver la sorpresa 💌';
+    if(open) burst();
+  });
+  const io = new IntersectionObserver(es=>{
+    es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target); } });
+  },{threshold:.15});
+  document.querySelectorAll('.rev').forEach((n,i)=>{
+    n.style.transitionDelay = (i % 2 ? .12 : 0) + 's'; io.observe(n);
+  });
+}
+
+/* --- terminal que se teclea sola --- */
+function typeTerminal(LINEAS){
+  const term = $('term'); let li = 0;
+  (function next(){
+    if(li >= LINEAS.length){
+      const c = document.createElement('span');
+      c.className='cursor'; c.textContent='|';
+      if(term.lastElementChild) term.lastElementChild.appendChild(c);
+      return;
+    }
+    const spec = LINEAS[li];
+    const row = document.createElement('div'); term.appendChild(row);
+    if(!spec.t){ row.innerHTML='&nbsp;'; li++; return setTimeout(next, 140); }
+    const tmp = document.createElement('div'); tmp.innerHTML = spec.t;
+    const plain = tmp.textContent;
+    const cur = document.createElement('span'); cur.className='cursor'; cur.textContent='|';
+    let i = 0;
+    const iv = setInterval(()=>{
+      i++;
+      row.textContent = plain.slice(0, i);
+      row.appendChild(cur);
+      if(i >= plain.length){
+        clearInterval(iv);
+        row.innerHTML = spec.t;
+        li++; setTimeout(next, 260);
+      }
+    }, spec.d || 22);
+  })();
+}
+
+/* --- cuenta regresiva --- */
+function startClock(iso){
+  const target = new Date(iso).getTime();
+  const pad = n => String(n).padStart(2,'0');
+  function tick(){
+    const diff = target - Date.now();
+    if(isNaN(target)){ $('clock').style.display='none'; return; }
+    if(diff <= 0){
+      $('clock').innerHTML = '<div class="unit" style="min-width:auto;padding:16px 26px">' +
+        '<div class="n">¡ES HORA! 💃</div><div class="l">te espero</div></div>';
+      $('hourLine').textContent = 'Ya es la hora · estoy listo';
+      $('msg').innerHTML = '<b>Ya es la hora.</b> Salimos ya, mi amor. Te ves hermosa, lo sé sin verte todavía.';
+      return;
+    }
+    const s = Math.floor(diff/1000);
+    $('d').textContent = pad(Math.floor(s/86400));
+    $('h').textContent = pad(Math.floor(s%86400/3600));
+    $('m').textContent = pad(Math.floor(s%3600/60));
+    $('s').textContent = pad(s%60);
+    setTimeout(tick, 1000);
+  }
+  tick();
+}
+
+/* --- corazones --- */
+const hearts = $('hearts');
+const GLYPH = ['♥','❤','💗','♡'];
+for(let i=0;i<26;i++){
+  const h = document.createElement('span');
+  h.className='h'; h.textContent = GLYPH[i%GLYPH.length];
+  h.style.left = Math.random()*100+'vw';
+  h.style.fontSize = (10+Math.random()*22)+'px';
+  h.style.animationDuration = (14+Math.random()*16)+'s';
+  h.style.animationDelay = (-Math.random()*30)+'s';
+  hearts.appendChild(h);
+}
+function burst(){
+  for(let i=0;i<18;i++){
+    const h = document.createElement('span');
+    h.className='h'; h.textContent='💗'; h.style.opacity=.9;
+    h.style.left = (30+Math.random()*40)+'vw';
+    h.style.fontSize = (16+Math.random()*20)+'px';
+    h.style.animationDuration = (3+Math.random()*3)+'s';
+    hearts.appendChild(h);
+    setTimeout(()=>h.remove(), 6500);
+  }
+}
+document.body.style.overflow = 'hidden';
+$('ans').focus();
+</script>
+</body>
+</html>
